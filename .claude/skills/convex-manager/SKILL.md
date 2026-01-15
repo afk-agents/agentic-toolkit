@@ -86,6 +86,35 @@ Output format:
 }
 ```
 
+### Create Production Deployment
+
+Add a production deployment to an existing project:
+
+```bash
+uv run .claude/skills/convex-manager/scripts/create_production_deployment.py <project_id>
+```
+
+**Arguments:**
+- `project_id`: Numeric ID of the project (required)
+
+**Example:**
+```bash
+uv run .claude/skills/convex-manager/scripts/create_production_deployment.py 1209929
+```
+
+Output format:
+```json
+{
+  "projectName": "my-app",
+  "projectSlug": "my-app",
+  "deploymentName": "happy-whale-456",
+  "deploymentUrl": "https://happy-whale-456.convex.cloud",
+  "status": "success"
+}
+```
+
+**Note:** This creates a production deployment for a project that currently only has a dev deployment. If the project already has a production deployment, the script will error.
+
 ### List Deployments
 
 List all deployments for a project:

@@ -57,14 +57,13 @@ Task Progress:
 
 **Step 5: Push to Github**
 
-- Initialize a new Github repository with `gh repo create [GITHUB_ORG_NAME]/[APP_NAME] --public --source=. --remote=origin`
+- Initialize a new Github repository in [APP_NAME] and then push it to Github with `gh repo create [GITHUB_ORG_NAME]/[APP_NAME] --public --source=. --remote=origin`
 
 **Step 6: Add Vercel**
 
-- Use the /convex-manager skill to create a new production deploy key (the CONVEX_DEPLOY_KEY key needed below)
-- Run `bunx vercel --help && bunx vercel env --help && bunx vercel projects --help` to see all the available commands
-- Use `bunx vercel projects` to create a new Vercel project
-- Use `bunx vercel env` to add the CONVEX_DEPLOY_KEY key to the production environment
+- Use the /convex-manager skill to create a new production deployment and deploy key (the CONVEX_DEPLOY_KEY key needed below)
+- Use the /vercel-manager skill to create a new Vercel project and add the CONVEX_DEPLOY_KEY key to the production environment as well as properly connect it to the Github repository
+- Use the /vercel-manager skill to create a new Vercel production deployment
 
 **Step 7: Deploy to Vercel**
 
