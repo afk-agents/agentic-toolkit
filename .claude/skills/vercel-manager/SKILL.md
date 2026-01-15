@@ -1,20 +1,21 @@
 ---
 name: vercel-manager
-description: Manage Vercel projects and deployments via the Vercel SDK. Use when listing, creating, or managing Vercel projects, deployments, or domains. Requires VERCEL_TOKEN in .env file.
+description: Manage Vercel projects and deployments via the Vercel REST API. Use when listing, creating, or managing Vercel projects, deployments, or domains. Requires VERCEL_TOKEN in .env file.
 ---
 
 # Vercel Manager
 
+Manage Vercel projects and deployments using the Vercel REST API with single-file Python scripts.
+
 ## Setup
 
-Executables are not checked into git. If `scripts/bin/` is empty, build them first:
+Create a `.env` file at your project root with your Vercel token:
 
-```bash
-cd .claude/skills/vercel-manager/scripts
-bun install
-bun build --compile src/list-projects.ts --outfile bin/list-projects
-bun build --compile src/create-project.ts --outfile bin/create-project
 ```
+VERCEL_TOKEN=your_token_here
+```
+
+Get a token from [Vercel Dashboard > Account Settings > Tokens](https://vercel.com/account/tokens).
 
 ## Available Operations
 
@@ -23,7 +24,7 @@ bun build --compile src/create-project.ts --outfile bin/create-project
 List all Vercel projects for your account or team:
 
 ```bash
-.claude/skills/vercel-manager/scripts/bin/list-projects
+uv run .claude/skills/vercel-manager/scripts/list_projects.py
 ```
 
 Output format:
@@ -34,7 +35,8 @@ Output format:
       "id": "prj_abc123",
       "name": "my-project",
       "framework": "nextjs",
-      "createdAt": "2023-01-15T08:30:00Z"
+      "createdAt": 1705312200000,
+      "updatedAt": 1705312200000
     }
   ]
 }
@@ -45,7 +47,7 @@ Output format:
 Create a new Vercel project with optional GitHub integration, environment variables, framework, and build command overrides:
 
 ```bash
-echo '<json>' | .claude/skills/vercel-manager/scripts/bin/create-project
+echo '<json>' | uv run .claude/skills/vercel-manager/scripts/create_project.py
 ```
 
 **Input JSON format:**
@@ -90,7 +92,7 @@ echo '<json>' | .claude/skills/vercel-manager/scripts/bin/create-project
 
 Simple project:
 ```bash
-echo '{"name": "my-app"}' | .claude/skills/vercel-manager/scripts/bin/create-project
+echo '{"name": "my-app"}' | uv run .claude/skills/vercel-manager/scripts/create_project.py
 ```
 
 Next.js with Convex:
@@ -106,7 +108,7 @@ echo '{
   "envVars": [
     {"key": "CONVEX_DEPLOY_KEY", "value": "prod:xxx", "type": "encrypted", "target": ["production"]}
   ]
-}' | .claude/skills/vercel-manager/scripts/bin/create-project
+}' | uv run .claude/skills/vercel-manager/scripts/create_project.py
 ```
 
 ### Deploy to Production
@@ -138,16 +140,6 @@ This script:
 - Reads VERCEL_TOKEN from the .env file
 - Runs `bunx vercel deploy --prod --yes` with the token
 - Returns the deployment URL on success
-
-## Building Scripts
-
-Scripts are TypeScript files compiled to single-file executables using bun:
-
-```bash
-cd .claude/skills/vercel-manager/scripts
-bun build --compile src/list-projects.ts --outfile bin/list-projects
-bun build --compile src/create-project.ts --outfile bin/create-project
-```
 
 ## Error Handling
 
