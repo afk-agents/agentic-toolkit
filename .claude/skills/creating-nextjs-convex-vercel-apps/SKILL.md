@@ -49,7 +49,6 @@ Task Progress:
   ```
 - Add the convex and convex auth dependency with `bun add convex @convex-dev/auth`
 - Run `bunx convex dev --once` to generate and push code to the configured dev deployment
-- TODO: create production deployment
 
 **Step 4: Add Convex Auth**
 
@@ -57,14 +56,32 @@ Task Progress:
 
 **Step 5: Push to Github**
 
-- Initialize a new Github repository in [APP_NAME] and then push it to Github with `gh repo create [GITHUB_ORG_NAME]/[APP_NAME] --public --source=. --remote=origin`
+- Initialize git and create initial commit:
+  ```bash
+  git init && git add . && git commit -m "Initial commit: Next.js app with Convex"
+  ```
+- Create Github repository and push:
+  ```bash
+  gh repo create [GITHUB_ORG_NAME]/[APP_NAME] --public --source=. --remote=origin --push
+  ```
 
 **Step 6: Add Vercel**
 
-- Use the /convex-manager skill to create a new production deployment and deploy key (the CONVEX_DEPLOY_KEY key needed below)
-- Use the /vercel-manager skill to create a new Vercel project and add the CONVEX_DEPLOY_KEY key to the production environment as well as properly connect it to the Github repository
+- Use the /convex-manager skill to create a production deployment for the project:
+  - Operation: `create_production_deployment [PROJECT_ID]`
+  - Note the production deployment name from the output (e.g., `grateful-fennec-131`)
+- Use the /convex-manager skill to create a deploy key for the production deployment:
+  - Operation: `create_deploy_key [PROD_DEPLOYMENT_NAME] vercel-deploy`
+  - Save the `deployKey` value from the output
+- Use the /vercel-manager skill to create a new Vercel project with:
+  - `name`: [APP_NAME]
+  - `framework`: nextjs
+  - `buildCommand`: `bunx convex deploy --cmd 'bun run build'`
+  - `installCommand`: `bun install`
+  - `gitRepository`: `{ "repo": "[GITHUB_ORG_NAME]/[APP_NAME]", "type": "github" }`
+  - `envVars`: Add `CONVEX_DEPLOY_KEY` with the deploy key from above, target `["production", "preview"]`
 - Use the /vercel-manager skill to create a new Vercel production deployment
 
 **Step 7: Deploy to Vercel**
 
-- Use `bunx vercel deploy --prod` to deploy the app to Vercel
+- Deploy to Vercel production: `bunx vercel deploy --prod --yes`
