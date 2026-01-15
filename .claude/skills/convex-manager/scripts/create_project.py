@@ -1,6 +1,7 @@
-#!/usr/bin/env python3
+#!/usr/bin/env -S uv run --script
 # /// script
-# dependencies = ["python-dotenv"]
+# requires-python = ">=3.10"
+# dependencies = []
 # ///
 """Create a new Convex project for a team.
 
@@ -8,6 +9,7 @@ Reads CONVEX_TOKEN from .env file in project root and calls the
 Convex Management API to create a new project.
 """
 
+import argparse
 import json
 import sys
 from pathlib import Path
@@ -134,22 +136,24 @@ def create_project(token, team_id, project_name, deployment_type):
 
 def main():
     """Main entry point."""
-    # Parse arguments
-    if len(sys.argv) < 2:
-        print("Usage: create_project.py <project_name> [deployment_type]", file=sys.stderr)
-        print("", file=sys.stderr)
-        print("Arguments:", file=sys.stderr)
-        print("  project_name      Name of the project to create", file=sys.stderr)
-        print("  deployment_type   'dev' or 'prod' (default: dev)", file=sys.stderr)
-        sys.exit(1)
+    parser = argparse.ArgumentParser(
+        description="Create a new Convex project for a team."
+    )
+    parser.add_argument(
+        "project_name",
+        help="Name of the project to create"
+    )
+    parser.add_argument(
+        "deployment_type",
+        nargs="?",
+        default="dev",
+        choices=["dev", "prod"],
+        help="Deployment type: 'dev' or 'prod' (default: dev)"
+    )
+    args = parser.parse_args()
 
-    project_name = sys.argv[1]
-    deployment_type = sys.argv[2] if len(sys.argv) > 2 else "dev"
-
-    # Validate deployment type
-    if deployment_type not in ["dev", "prod"]:
-        print(f"Error: deployment_type must be 'dev' or 'prod', got '{deployment_type}'", file=sys.stderr)
-        sys.exit(1)
+    project_name = args.project_name
+    deployment_type = args.deployment_type
 
     # Load token from .env
     token = load_env_token()

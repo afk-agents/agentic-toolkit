@@ -24,7 +24,7 @@ Get a token from [Vercel Dashboard > Account Settings > Tokens](https://vercel.c
 List all Vercel projects for your account or team:
 
 ```bash
-uv run .claude/skills/vercel-manager/scripts/list_projects.py
+./scripts/list_projects.py
 ```
 
 Output format:
@@ -47,7 +47,7 @@ Output format:
 Create a new Vercel project with optional GitHub integration, environment variables, framework, and build command overrides:
 
 ```bash
-echo '<json>' | uv run .claude/skills/vercel-manager/scripts/create_project.py
+echo '<json>' | ./scripts/create_project.py
 ```
 
 **Input JSON format:**
@@ -92,7 +92,7 @@ echo '<json>' | uv run .claude/skills/vercel-manager/scripts/create_project.py
 
 Simple project:
 ```bash
-echo '{"name": "my-app"}' | uv run .claude/skills/vercel-manager/scripts/create_project.py
+echo '{"name": "my-app"}' | ./scripts/create_project.py
 ```
 
 Next.js with Convex:
@@ -108,7 +108,7 @@ echo '{
   "envVars": [
     {"key": "CONVEX_DEPLOY_KEY", "value": "prod:xxx", "type": "encrypted", "target": ["production"]}
   ]
-}' | uv run .claude/skills/vercel-manager/scripts/create_project.py
+}' | ./scripts/create_project.py
 ```
 
 ### Deploy to Production
@@ -116,7 +116,7 @@ echo '{
 Deploy a project to Vercel production:
 
 ```bash
-uv run .claude/skills/vercel-manager/scripts/deploy.py <project_directory>
+./scripts/deploy.py <project_directory>
 ```
 
 **Arguments:**
@@ -124,7 +124,7 @@ uv run .claude/skills/vercel-manager/scripts/deploy.py <project_directory>
 
 **Example:**
 ```bash
-uv run .claude/skills/vercel-manager/scripts/deploy.py ./my-app
+./scripts/deploy.py ./my-app
 ```
 
 Output format:

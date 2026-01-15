@@ -1,18 +1,14 @@
-#!/usr/bin/env python3
+#!/usr/bin/env -S uv run --script
 # /// script
-# dependencies = ["python-dotenv"]
+# requires-python = ">=3.10"
+# dependencies = []
 # ///
 """Deploy a project to Vercel production.
 
 Reads VERCEL_TOKEN from .env file and runs vercel deploy with the token.
-
-Usage:
-    deploy.py <project_directory>
-
-Example:
-    deploy.py ./my-app
 """
 
+import argparse
 import json
 import subprocess
 import sys
@@ -73,17 +69,16 @@ def load_env_token():
 
 def main():
     """Main entry point."""
-    # Parse arguments
-    if len(sys.argv) < 2:
-        print("Usage: deploy.py <project_directory>", file=sys.stderr)
-        print("", file=sys.stderr)
-        print("Arguments:", file=sys.stderr)
-        print("  project_directory   Path to the project to deploy", file=sys.stderr)
-        print("", file=sys.stderr)
-        print("Deploys the project to Vercel production.", file=sys.stderr)
-        sys.exit(1)
+    parser = argparse.ArgumentParser(
+        description="Deploy a project to Vercel production."
+    )
+    parser.add_argument(
+        "project_directory",
+        help="Path to the project to deploy"
+    )
+    args = parser.parse_args()
 
-    project_dir = Path(sys.argv[1]).resolve()
+    project_dir = Path(args.project_directory).resolve()
 
     if not project_dir.exists():
         print(f"Error: Directory not found: {project_dir}", file=sys.stderr)

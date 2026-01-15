@@ -1,6 +1,7 @@
-#!/usr/bin/env python3
+#!/usr/bin/env -S uv run --script
 # /// script
-# dependencies = ["python-dotenv"]
+# requires-python = ">=3.10"
+# dependencies = []
 # ///
 """Create a deploy key for a Convex deployment.
 
@@ -8,6 +9,7 @@ Reads CONVEX_TOKEN from .env file in project root and calls the
 Convex Management API to create a new deploy key for a deployment.
 """
 
+import argparse
 import json
 import sys
 from pathlib import Path
@@ -99,19 +101,22 @@ def create_deploy_key(token, deployment_name, key_name):
 
 def main():
     """Main entry point."""
-    # Parse arguments
-    if len(sys.argv) < 3:
-        print("Usage: create_deploy_key.py <deployment_name> <key_name>", file=sys.stderr)
-        print("", file=sys.stderr)
-        print("Arguments:", file=sys.stderr)
-        print("  deployment_name   Name of the deployment (e.g., 'playful-otter-123')", file=sys.stderr)
-        print("  key_name         Name for the deploy key", file=sys.stderr)
-        print("", file=sys.stderr)
-        print("Use list_deployments.py to find deployment names.", file=sys.stderr)
-        sys.exit(1)
+    parser = argparse.ArgumentParser(
+        description="Create a deploy key for a Convex deployment.",
+        epilog="Use list_deployments.py to find deployment names."
+    )
+    parser.add_argument(
+        "deployment_name",
+        help="Name of the deployment (e.g., 'playful-otter-123')"
+    )
+    parser.add_argument(
+        "key_name",
+        help="Name for the deploy key"
+    )
+    args = parser.parse_args()
 
-    deployment_name = sys.argv[1]
-    key_name = sys.argv[2]
+    deployment_name = args.deployment_name
+    key_name = args.key_name
 
     # Load token from .env
     token = load_env_token()

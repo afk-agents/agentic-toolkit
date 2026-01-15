@@ -1,6 +1,7 @@
-#!/usr/bin/env python3
+#!/usr/bin/env -S uv run --script
 # /// script
-# dependencies = ["python-dotenv"]
+# requires-python = ">=3.10"
+# dependencies = []
 # ///
 """List all deployments for a Convex project.
 
@@ -8,6 +9,7 @@ Reads CONVEX_TOKEN from .env file in project root and calls the
 Convex Management API to list all deployments for a project.
 """
 
+import argparse
 import json
 import sys
 from pathlib import Path
@@ -91,21 +93,18 @@ def list_deployments(token, project_id):
 
 def main():
     """Main entry point."""
-    # Parse arguments
-    if len(sys.argv) < 2:
-        print("Usage: list_deployments.py <project_id>", file=sys.stderr)
-        print("", file=sys.stderr)
-        print("Arguments:", file=sys.stderr)
-        print("  project_id   Numeric ID of the project", file=sys.stderr)
-        print("", file=sys.stderr)
-        print("Use list_projects.py to find project IDs.", file=sys.stderr)
-        sys.exit(1)
+    parser = argparse.ArgumentParser(
+        description="List all deployments for a Convex project.",
+        epilog="Use list_projects.py to find project IDs."
+    )
+    parser.add_argument(
+        "project_id",
+        type=int,
+        help="Numeric ID of the project"
+    )
+    args = parser.parse_args()
 
-    try:
-        project_id = int(sys.argv[1])
-    except ValueError:
-        print(f"Error: project_id must be a number, got '{sys.argv[1]}'", file=sys.stderr)
-        sys.exit(1)
+    project_id = args.project_id
 
     # Load token from .env
     token = load_env_token()

@@ -44,11 +44,12 @@ mkdir -p [APP_NAME]/convex
 Copy all files from `./assets/convex/` to `[APP_NAME]/convex/`.
 
 **2b. Create Convex project (dev deployment):**
-```bash
-uv run .claude/skills/convex-manager/scripts/create_project.py [APP_NAME] dev
-```
 
-Output:
+Use `/convex-manager` to create a new project:
+- Project name: `[APP_NAME]`
+- Deployment type: `dev`
+
+Expected output:
 ```json
 {
   "projectId": 123456,
@@ -60,11 +61,12 @@ Output:
 Save `deploymentName` and `deploymentUrl`.
 
 **2c. Create deploy key for dev deployment:**
-```bash
-uv run .claude/skills/convex-manager/scripts/create_deploy_key.py [DEV_DEPLOYMENT_NAME] dev-deploy
-```
 
-Output:
+Use `/convex-manager` to create a deploy key:
+- Deployment name: `[DEV_DEPLOYMENT_NAME]`
+- Key name: `dev-deploy`
+
+Expected output:
 ```json
 {
   "deployKey": "dev:example-slug-789|eyJ2Mi..."
@@ -100,14 +102,14 @@ cd [APP_NAME] && gh repo create [GITHUB_ORG]/[APP_NAME] --public --source=. --re
 ### Step 4: Create Convex Production Deployment
 
 **4a. Provision production deployment:**
-```bash
-uv run .claude/skills/convex-manager/scripts/create_production_deployment.py [CONVEX_TEAM_SLUG] [APP_NAME]
-```
 
-Output:
+Use `/convex-manager` to create a production deployment:
+- Project ID: `[PROJECT_ID]` (from Step 2b)
+
+Expected output:
 ```json
 {
-  "teamSlug": "nathan-amick",
+  "projectName": "my-app",
   "projectSlug": "my-app",
   "deploymentName": "prod-slug-123",
   "deploymentUrl": "https://prod-slug-123.convex.cloud",
@@ -118,11 +120,12 @@ Output:
 Save `deploymentName` for the next step.
 
 **4b. Create deploy key for production:**
-```bash
-uv run .claude/skills/convex-manager/scripts/create_deploy_key.py [PROD_DEPLOYMENT_NAME] vercel-deploy
-```
 
-Output:
+Use `/convex-manager` to create a deploy key:
+- Deployment name: `[PROD_DEPLOYMENT_NAME]`
+- Key name: `vercel-deploy`
+
+Expected output:
 ```json
 {
   "deployKey": "prod:prod-slug-123|eyJ2Mi..."
@@ -136,28 +139,22 @@ Save this deploy key for Vercel.
 ### Step 5: Create Vercel Project and Deploy
 
 **5a. Create Vercel project:**
-```bash
-echo '{
-  "name": "[APP_NAME]",
-  "framework": "nextjs",
-  "buildCommand": "bunx convex deploy --cmd '\''bun run build'\''",
-  "installCommand": "bun install",
-  "gitRepository": {
-    "repo": "[GITHUB_ORG]/[APP_NAME]",
-    "type": "github"
-  },
-  "envVars": [
-    {"key": "CONVEX_DEPLOY_KEY", "value": "[PROD_DEPLOY_KEY]", "type": "encrypted", "target": ["production", "preview"]}
-  ]
-}' | .claude/skills/vercel-manager/scripts/bin/create-project
-```
+
+Use `/vercel-manager` to create a project with this configuration:
+- Name: `[APP_NAME]`
+- Framework: `nextjs`
+- Build command: `bunx convex deploy --cmd 'bun run build'`
+- Install command: `bun install`
+- Git repository: `[GITHUB_ORG]/[APP_NAME]` (type: github)
+- Environment variables:
+  - `CONVEX_DEPLOY_KEY`: `[PROD_DEPLOY_KEY]` (encrypted, targets: production, preview)
 
 **5b. Deploy to Vercel:**
-```bash
-uv run .claude/skills/vercel-manager/scripts/deploy.py [APP_NAME]
-```
 
-Output:
+Use `/vercel-manager` to deploy the project:
+- Project directory: `[APP_NAME]`
+
+Expected output:
 ```json
 {
   "status": "success",

@@ -1,6 +1,7 @@
-#!/usr/bin/env python3
+#!/usr/bin/env -S uv run --script
 # /// script
-# dependencies = ["python-dotenv"]
+# requires-python = ">=3.10"
+# dependencies = []
 # ///
 """List all Convex projects for a team.
 

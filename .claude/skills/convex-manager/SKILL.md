@@ -12,7 +12,7 @@ description: Manage Convex projects and deployments via the Management API. Use 
 List all Convex projects for your team:
 
 ```bash
-uv run .claude/skills/convex-manager/scripts/list_projects.py
+./scripts/list_projects.py
 ```
 
 Output format:
@@ -39,7 +39,7 @@ The script automatically:
 Create a new Convex project:
 
 ```bash
-uv run .claude/skills/convex-manager/scripts/create_project.py <project_name> [deployment_type]
+./scripts/create_project.py <project_name> [deployment_type]
 ```
 
 **Arguments:**
@@ -48,7 +48,7 @@ uv run .claude/skills/convex-manager/scripts/create_project.py <project_name> [d
 
 **Example:**
 ```bash
-uv run .claude/skills/convex-manager/scripts/create_project.py my-new-app dev
+./scripts/create_project.py my-new-app dev
 ```
 
 Output format:
@@ -65,7 +65,7 @@ Output format:
 Delete a project and all its deployments:
 
 ```bash
-uv run .claude/skills/convex-manager/scripts/delete_project.py <project_id>
+./scripts/delete_project.py <project_id>
 ```
 
 **Arguments:**
@@ -73,7 +73,7 @@ uv run .claude/skills/convex-manager/scripts/delete_project.py <project_id>
 
 **Example:**
 ```bash
-uv run .claude/skills/convex-manager/scripts/delete_project.py 456
+./scripts/delete_project.py 456
 ```
 
 **WARNING:** This permanently deletes the project and ALL its deployments. Use `list_projects.py` to find project IDs before deleting.
@@ -91,7 +91,7 @@ Output format:
 Add a production deployment to an existing project:
 
 ```bash
-uv run .claude/skills/convex-manager/scripts/create_production_deployment.py <project_id>
+./scripts/create_production_deployment.py <project_id>
 ```
 
 **Arguments:**
@@ -99,7 +99,7 @@ uv run .claude/skills/convex-manager/scripts/create_production_deployment.py <pr
 
 **Example:**
 ```bash
-uv run .claude/skills/convex-manager/scripts/create_production_deployment.py 1209929
+./scripts/create_production_deployment.py 1209929
 ```
 
 Output format:
@@ -120,7 +120,7 @@ Output format:
 List all deployments for a project:
 
 ```bash
-uv run .claude/skills/convex-manager/scripts/list_deployments.py <project_id>
+./scripts/list_deployments.py <project_id>
 ```
 
 **Arguments:**
@@ -128,7 +128,7 @@ uv run .claude/skills/convex-manager/scripts/list_deployments.py <project_id>
 
 **Example:**
 ```bash
-uv run .claude/skills/convex-manager/scripts/list_deployments.py 1209929
+./scripts/list_deployments.py 1209929
 ```
 
 Output format:
@@ -154,7 +154,7 @@ Output format:
 Create a deploy key for a deployment:
 
 ```bash
-uv run .claude/skills/convex-manager/scripts/create_deploy_key.py <deployment_name> <key_name>
+./scripts/create_deploy_key.py <deployment_name> <key_name>
 ```
 
 **Arguments:**
@@ -163,7 +163,7 @@ uv run .claude/skills/convex-manager/scripts/create_deploy_key.py <deployment_na
 
 **Example:**
 ```bash
-uv run .claude/skills/convex-manager/scripts/create_deploy_key.py playful-otter-123 ci-deploy-key
+./scripts/create_deploy_key.py playful-otter-123 ci-deploy-key
 ```
 
 Output format:
