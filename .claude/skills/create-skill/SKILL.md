@@ -30,7 +30,7 @@ Skill Creation Progress:
 - [ ] Step 1: Read required documentation (both URLs above)
 - [ ] Step 2: Understand the use case and gather requirements
 - [ ] Step 3: Design the skill structure
-- [ ] Step 4: Write SKILL.md with frontmatter and instructions
+- [ ] Step 4: Write or update SKILL.md with frontmatter and instructions
 - [ ] Step 5: Add supporting files if needed
 - [ ] Step 6: Validate against checklist
 ```
@@ -201,6 +201,105 @@ Output:
 - Saves tokens and ensures reliability
 - Make execution intent clear: "Run `analyze.py` to extract fields"
 
+**Python scripts MUST use uv inline script format (PEP 723)**:
+
+All Python scripts in skills must be self-contained executables using `uv run --script` with inline dependency metadata. This ensures scripts work without separate virtual environments or requirements files.
+
+**Required script structure:**
+```python
+#!/usr/bin/env -S uv run --script
+#
+# /// script
+# requires-python = ">=3.12"
+# dependencies = ["httpx", "rich"]
+# ///
+
+"""Short description of what this script does."""
+
+import argparse
+import httpx
+from rich import print
+
+def main():
+    parser = argparse.ArgumentParser(
+        description="Short description of what this script does."
+    )
+    parser.add_argument("input", help="Input file or value")
+    parser.add_argument("-o", "--output", help="Output file path")
+    parser.add_argument("-v", "--verbose", action="store_true", help="Verbose output")
+    args = parser.parse_args()
+
+    # Script logic here
+    print(f"Processing {args.input}")
+
+if __name__ == "__main__":
+    main()
+```
+
+**Script requirements:**
+- Shebang: `#!/usr/bin/env -S uv run --script` (makes script directly executable)
+- PEP 723 metadata block with `requires-python` and `dependencies`
+- `argparse` with `-h`/`--help` support (automatic with argparse)
+- Descriptive help text for all arguments
+- `if __name__ == "__main__":` guard
+
+**Example: API client script**
+```python
+#!/usr/bin/env -S uv run --script
+#
+# /// script
+# requires-python = ">=3.12"
+# dependencies = ["httpx"]
+# ///
+
+"""Fetch and display data from an API endpoint."""
+
+import argparse
+import json
+import sys
+import httpx
+
+def main():
+    parser = argparse.ArgumentParser(
+        description="Fetch and display data from an API endpoint."
+    )
+    parser.add_argument("url", help="API endpoint URL")
+    parser.add_argument("-o", "--output", help="Output file (default: stdout)")
+    parser.add_argument("--pretty", action="store_true", help="Pretty-print JSON output")
+    args = parser.parse_args()
+
+    try:
+        response = httpx.get(args.url)
+        response.raise_for_status()
+        data = response.json()
+
+        output = json.dumps(data, indent=2) if args.pretty else json.dumps(data)
+
+        if args.output:
+            with open(args.output, "w") as f:
+                f.write(output)
+        else:
+            print(output)
+    except httpx.HTTPError as e:
+        print(f"Error: {e}", file=sys.stderr)
+        sys.exit(1)
+
+if __name__ == "__main__":
+    main()
+```
+
+**Running scripts:**
+```bash
+# Direct execution (script must be chmod +x)
+./scripts/fetch_api.py https://api.example.com/data --pretty
+
+# Or via uv explicitly
+uv run scripts/fetch_api.py https://api.example.com/data -o output.json
+
+# Get help
+./scripts/fetch_api.py -h
+```
+
 ### Step 6: Validate Against Checklist
 
 Use this checklist before considering the skill complete:
@@ -224,10 +323,12 @@ Use this checklist before considering the skill complete:
 - [ ] Progressive disclosure used appropriately
 
 #### Scripts and Code (if applicable)
+- [ ] Python scripts use `#!/usr/bin/env -S uv run --script` shebang
+- [ ] Python scripts include PEP 723 inline dependency metadata
+- [ ] Python scripts use `argparse` with `-h` help support
+- [ ] All script arguments have descriptive help text
 - [ ] Scripts handle errors explicitly
 - [ ] No "magic numbers" (all values justified)
-- [ ] Required packages listed and verified
-- [ ] Clear documentation for each script
 - [ ] Validation steps for critical operations
 
 ## Key Best Practices
@@ -241,6 +342,8 @@ Use this checklist before considering the skill complete:
 ✓ Add feedback loops for quality-critical tasks
 ✓ Use forward slashes in all paths
 ✓ Bundle utility scripts for reliability
+✓ Use `uv run --script` with PEP 723 inline dependencies for Python scripts
+✓ Include `-h` help support in all scripts via `argparse`
 ✓ Test with real usage and iterate
 
 ### Avoid This
@@ -252,6 +355,8 @@ Use this checklist before considering the skill complete:
 ✗ Deeply nested file references (keep one level deep)
 ✗ Offering too many options without a default
 ✗ First or second person in descriptions
+✗ Python scripts without `-h` help documentation
+✗ Separate requirements.txt or pyproject.toml for skill scripts (use inline deps)
 
 ## Common Patterns
 
