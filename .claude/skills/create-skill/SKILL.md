@@ -331,6 +331,12 @@ Use this checklist before considering the skill complete:
 - [ ] No "magic numbers" (all values justified)
 - [ ] Validation steps for critical operations
 
+#### Skill Independence
+- [ ] No direct references to other skills' scripts or internal files
+- [ ] Other skills referenced by `/skill-name`, not file paths
+- [ ] Scripts within skill use relative paths (`./scripts/`)
+- [ ] No hardcoded paths like `.claude/skills/other-skill/`
+
 ## Key Best Practices
 
 ### Do This
@@ -344,6 +350,8 @@ Use this checklist before considering the skill complete:
 ✓ Bundle utility scripts for reliability
 ✓ Use `uv run --script` with PEP 723 inline dependencies for Python scripts
 ✓ Include `-h` help support in all scripts via `argparse`
+✓ Delegate to other skills by name (`/skill-name`), not by calling their scripts
+✓ Use relative paths (`./scripts/`) for scripts within the same skill
 ✓ Test with real usage and iterate
 
 ### Avoid This
@@ -357,6 +365,8 @@ Use this checklist before considering the skill complete:
 ✗ First or second person in descriptions
 ✗ Python scripts without `-h` help documentation
 ✗ Separate requirements.txt or pyproject.toml for skill scripts (use inline deps)
+✗ Directly calling another skill's scripts (use `/skill-name` delegation instead)
+✗ Hardcoded paths to other skills' internal files
 
 ## Common Patterns
 
@@ -413,6 +423,110 @@ Output:
 [specific output]
 \`\`\`
 ````
+
+## Avoiding Skill Coupling
+
+When building skills that work together, keep them independent. Never have one skill directly call another skill's scripts or implementation details.
+
+### The Problem: Tight Coupling
+
+**Bad - directly calling another skill's scripts:**
+```markdown
+## Step 2: Create deployment
+
+Run the convex-manager script:
+\`\`\`bash
+uv run .claude/skills/convex-manager/scripts/create_project.py my-app dev
+\`\`\`
+```
+
+This creates problems:
+- Breaks if the other skill's internal structure changes
+- Creates hidden dependencies between skills
+- Makes skills non-portable
+- Violates encapsulation
+
+### The Solution: Delegate via Skill Invocation
+
+**Good - delegate to the skill by name:**
+```markdown
+## Step 2: Create deployment
+
+Use `/convex-manager` to create a new project:
+- Project name: `my-app`
+- Deployment type: `dev`
+
+Expected output:
+\`\`\`json
+{
+  "projectId": 123456,
+  "deploymentName": "example-slug-789"
+}
+\`\`\`
+```
+
+This approach:
+- Treats skills as black boxes with defined interfaces
+- Allows each skill to evolve independently
+- Makes orchestrating skills portable and maintainable
+- Documents what the skill needs, not how it works internally
+
+### Script Paths Within a Skill
+
+Scripts within the *same* skill should use relative paths:
+
+**Good - relative path within the skill:**
+```markdown
+\`\`\`bash
+./scripts/create_project.py my-app dev
+\`\`\`
+```
+
+**Bad - absolute path from project root:**
+```markdown
+\`\`\`bash
+uv run .claude/skills/convex-manager/scripts/create_project.py my-app dev
+\`\`\`
+```
+
+### Orchestrating Skills Pattern
+
+When building a skill that coordinates multiple other skills:
+
+```markdown
+## Workflow
+
+### Step 1: Set up database
+Use `/database-manager` to create the database:
+- Database name: `[APP_NAME]`
+- Region: `us-east-1`
+
+### Step 2: Configure authentication
+Use `/auth-manager` to set up authentication:
+- Provider: OAuth
+- Callback URL: `https://[APP_NAME].example.com/callback`
+
+### Step 3: Deploy application
+Use `/deploy-manager` to deploy:
+- Environment: production
+- Database URL: `[DATABASE_URL from Step 1]`
+```
+
+Key principles:
+1. **Reference skills by name** (`/skill-name`), not by file path
+2. **Specify inputs clearly** - what the skill needs to know
+3. **Document expected outputs** - what to capture for later steps
+4. **Pass data between steps** - use outputs from one skill as inputs to the next
+
+### Validation Checklist Addition
+
+Add these checks to your skill review:
+
+#### Coupling
+- [ ] No direct references to other skills' scripts or files
+- [ ] Other skills referenced by `/skill-name`, not file paths
+- [ ] Scripts within skill use relative paths (`./scripts/`)
+- [ ] No hardcoded paths to `.claude/skills/other-skill/`
 
 ## Testing and Iteration
 
