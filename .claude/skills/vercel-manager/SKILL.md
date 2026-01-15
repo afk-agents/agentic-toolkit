@@ -109,6 +109,36 @@ echo '{
 }' | .claude/skills/vercel-manager/scripts/bin/create-project
 ```
 
+### Deploy to Production
+
+Deploy a project to Vercel production:
+
+```bash
+uv run .claude/skills/vercel-manager/scripts/deploy.py <project_directory>
+```
+
+**Arguments:**
+- `project_directory`: Path to the project to deploy (required)
+
+**Example:**
+```bash
+uv run .claude/skills/vercel-manager/scripts/deploy.py ./my-app
+```
+
+Output format:
+```json
+{
+  "status": "success",
+  "projectDirectory": "/path/to/my-app",
+  "deploymentUrl": "https://my-app.vercel.app"
+}
+```
+
+This script:
+- Reads VERCEL_TOKEN from the .env file
+- Runs `bunx vercel deploy --prod --yes` with the token
+- Returns the deployment URL on success
+
 ## Building Scripts
 
 Scripts are TypeScript files compiled to single-file executables using bun:

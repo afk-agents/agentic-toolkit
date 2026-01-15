@@ -6,6 +6,11 @@
 
 Reads CONVEX_TOKEN from .env file in project root and calls the
 Convex API to provision a production deployment for a project.
+
+Usage:
+    create_production_deployment.py <team_slug> <project_slug>
+
+The internal API requires both team_slug and project_slug.
 """
 
 import json
@@ -64,66 +69,6 @@ def load_env_token():
     return token
 
 
-def get_project_details(token, project_id):
-    """Get project details including the project slug."""
-    # First get team ID and slug from token
-    url = "https://api.convex.dev/v1/token_details"
-
-    try:
-        req = Request(url)
-        req.add_header("Authorization", f"Bearer {token}")
-
-        with urlopen(req, timeout=10) as response:
-            data = json.loads(response.read().decode())
-            team_id = data.get("teamId") or data.get("team_id")
-            team_slug = data.get("teamSlug") or data.get("team_slug")
-
-            if not team_id:
-                print("Error: teamId not found in token details response", file=sys.stderr)
-                sys.exit(1)
-
-    except HTTPError as e:
-        error_body = e.read().decode() if e.fp else "No error details"
-        print(f"HTTP Error {e.code}: {e.reason}", file=sys.stderr)
-        print(f"Response: {error_body}", file=sys.stderr)
-        sys.exit(1)
-    except URLError as e:
-        print(f"Network error: {e.reason}", file=sys.stderr)
-        sys.exit(1)
-
-    # Now get project list to find the project slug
-    url = f"https://api.convex.dev/v1/teams/{team_id}/list_projects"
-
-    try:
-        req = Request(url)
-        req.add_header("Authorization", f"Bearer {token}")
-
-        with urlopen(req, timeout=10) as response:
-            projects = json.loads(response.read().decode())
-
-            for project in projects:
-                if project.get("id") == project_id:
-                    return {
-                        "teamSlug": team_slug,
-                        "projectSlug": project.get("slug"),
-                        "projectName": project.get("name"),
-                        "deployments": project.get("deployments", [])
-                    }
-
-            print(f"Error: Project with ID {project_id} not found", file=sys.stderr)
-            print(f"Available projects: {[p.get('id') for p in projects]}", file=sys.stderr)
-            sys.exit(1)
-
-    except HTTPError as e:
-        error_body = e.read().decode() if e.fp else "No error details"
-        print(f"HTTP Error {e.code}: {e.reason}", file=sys.stderr)
-        print(f"Response: {error_body}", file=sys.stderr)
-        sys.exit(1)
-    except URLError as e:
-        print(f"Network error: {e.reason}", file=sys.stderr)
-        sys.exit(1)
-
-
 def provision_production_deployment(token, team_slug, project_slug):
     """Provision a production deployment for the project."""
     url = "https://api.convex.dev/api/deployment/provision_and_authorize"
@@ -162,47 +107,29 @@ def provision_production_deployment(token, team_slug, project_slug):
 def main():
     """Main entry point."""
     # Parse arguments
-    if len(sys.argv) < 2:
-        print("Usage: create_production_deployment.py <project_id>", file=sys.stderr)
+    if len(sys.argv) < 3:
+        print("Usage: create_production_deployment.py <team_slug> <project_slug>", file=sys.stderr)
         print("", file=sys.stderr)
         print("Arguments:", file=sys.stderr)
-        print("  project_id   Numeric ID of the project", file=sys.stderr)
+        print("  team_slug      Team slug (e.g., 'nathan-amick')", file=sys.stderr)
+        print("  project_slug   Project slug (e.g., 'my-app')", file=sys.stderr)
         print("", file=sys.stderr)
         print("Creates a production deployment for an existing project.", file=sys.stderr)
-        print("Use list_projects.py to find project IDs.", file=sys.stderr)
         sys.exit(1)
 
-    try:
-        project_id = int(sys.argv[1])
-    except ValueError:
-        print(f"Error: project_id must be a number, got '{sys.argv[1]}'", file=sys.stderr)
-        sys.exit(1)
+    team_slug = sys.argv[1]
+    project_slug = sys.argv[2]
 
     # Load token from .env
     token = load_env_token()
 
-    # Get project details
-    project = get_project_details(token, project_id)
-
-    # Check if production deployment already exists
-    existing_prod = None
-    for deployment in project.get("deployments", []):
-        if deployment.get("deploymentType") == "prod":
-            existing_prod = deployment
-            break
-
-    if existing_prod:
-        print(f"Error: Project '{project['projectName']}' already has a production deployment", file=sys.stderr)
-        print(f"Existing production deployment: {existing_prod.get('name')}", file=sys.stderr)
-        sys.exit(1)
-
     # Provision production deployment
-    result = provision_production_deployment(token, project["teamSlug"], project["projectSlug"])
+    result = provision_production_deployment(token, team_slug, project_slug)
 
     # Format output
     output = {
-        "projectName": project["projectName"],
-        "projectSlug": project["projectSlug"],
+        "teamSlug": team_slug,
+        "projectSlug": project_slug,
         "deploymentName": result.get("deploymentName"),
         "deploymentUrl": result.get("url"),
         "status": "success"
