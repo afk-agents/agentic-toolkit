@@ -91,15 +91,16 @@ Output format:
 Add a production deployment to an existing project:
 
 ```bash
-./scripts/create_production_deployment.py <project_id>
+./scripts/create_production_deployment.py <team_slug> <project_id>
 ```
 
 **Arguments:**
+- `team_slug`: Team slug (required, e.g., 'my-team')
 - `project_id`: Numeric ID of the project (required)
 
 **Example:**
 ```bash
-./scripts/create_production_deployment.py 1209929
+./scripts/create_production_deployment.py my-team 1209929
 ```
 
 Output format:

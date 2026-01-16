@@ -175,23 +175,24 @@ def main():
         epilog="Creates a production deployment for a project that currently only has a dev deployment."
     )
     parser.add_argument(
+        "team_slug",
+        help="Team slug (e.g., 'my-team')"
+    )
+    parser.add_argument(
         "project_id",
         type=int,
         help="Numeric ID of the project"
     )
     args = parser.parse_args()
 
+    team_slug = args.team_slug
     project_id = args.project_id
 
     # Load token from .env
     token = load_env_token()
 
-    # Get team ID and slug from token
-    team_id, team_slug = extract_team_id_from_token(token)
-
-    if not team_slug:
-        print("Error: Could not determine team slug from token", file=sys.stderr)
-        sys.exit(1)
+    # Get team ID from token (needed for project lookup)
+    team_id, _ = extract_team_id_from_token(token)
 
     # Get project details
     project = get_project_details(token, team_id, project_id)

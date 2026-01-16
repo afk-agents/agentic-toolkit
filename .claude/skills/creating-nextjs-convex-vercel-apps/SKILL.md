@@ -5,51 +5,53 @@ description: Create and deploy a new Next.js application with Convex backend and
 
 # Creating Next.js + Convex + Vercel Apps
 
-Creates a new Next.js app with Convex backend, pushes to GitHub, and deploys to Vercel with CI/CD.
+
 
 ## Variables
 
 - **APP_NAME**: Lowercase letters, numbers, and hyphens only (e.g., `my-cool-app`)
+- **PROJECT_DIR**: `~/code/projects/[APP_NAME]`
 - **GITHUB_ORG**: `afk-agents`
 - **CONVEX_TEAM_SLUG**: `nathan-amick`
+
+**Important:** Always use the full `PROJECT_DIR` path when running commands. When a command needs to run in the project directory, `cd` into it first, then use `cd -` afterward to return to the previous directory:
+```bash
+cd ~/code/projects/my-app && bun install && cd -
+```
 
 ## Workflow
 
 ```
 Task Progress:
-- [ ] Step 1: Create app directory and Next.js app
-- [ ] Step 2: Add Convex with dev deployment
-- [ ] Step 3: Push to GitHub
-- [ ] Step 4: Create Convex production deployment
-- [ ] Step 5: Create Vercel project and deploy
+- [ ] Step 1: Create Next.js app and push to GitHub
+- [ ] Step 2: Create Convex project (dev deployment)
+- [ ] Step 3: Create deploy key for dev deployment
+- [ ] Step 4: Write .env.local
+- [ ] Step 5: Add dependencies and push schema
+- [ ] Step 6: Create Convex production deployment
+- [ ] Step 7: Create deploy key for production
+- [ ] Step 8: Create Vercel project
+- [ ] Step 9: Deploy to Vercel
 ```
 
 ---
 
-### Step 1: Create App Directory and Next.js App
+### Step 1: Create Next.js App and Push to GitHub
 
+Run the setup script (creates directory, Next.js app, copies Convex files, initializes git, creates GitHub repo):
 ```bash
-mkdir [APP_NAME]
-cd [APP_NAME] && bun create next-app@latest . --use-bun --typescript --yes && cd -
+./scripts/setup_nextjs_app.py [APP_NAME] --github-org [GITHUB_ORG] --base-dir ~/code/projects
 ```
 
 ---
 
-### Step 2: Add Convex with Dev Deployment
-
-**2a. Copy Convex assets:**
-```bash
-mkdir -p [APP_NAME]/convex
-```
-Copy all files from `./assets/convex/` to `[APP_NAME]/convex/`.
-
-**2b. Create Convex project (dev deployment):**
+### Step 2: Create Convex Project (Dev Deployment)
 
 Use `/convex-manager` to create a new project:
 - Project name: `[APP_NAME]`
 - Deployment type: `dev`
 
-Expected output:
+Expected output - save `projectId`, `deploymentName`, and `deploymentUrl`:
 ```json
 {
   "projectId": 123456,
@@ -58,89 +60,77 @@ Expected output:
 }
 ```
 
-Save `deploymentName` and `deploymentUrl`.
+---
 
-**2c. Create deploy key for dev deployment:**
+### Step 3: Create Deploy Key for Dev Deployment
 
 Use `/convex-manager` to create a deploy key:
 - Deployment name: `[DEV_DEPLOYMENT_NAME]`
 - Key name: `dev-deploy`
 
-Expected output:
+Expected output - save `deployKey`:
 ```json
 {
   "deployKey": "dev:example-slug-789|eyJ2Mi..."
 }
 ```
 
-**2d. Write `.env.local`:**
+---
+
+### Step 4: Write .env.local
+
+Create `[PROJECT_DIR]/.env.local`:
 ```env
 # Deployment used by `bunx convex dev`
 CONVEX_DEPLOYMENT=[DEV_DEPLOYMENT_NAME]
 NEXT_PUBLIC_CONVEX_URL=[DEPLOYMENT_URL]
 ```
 
-**2e. Add dependencies and push schema:**
-```bash
-cd [APP_NAME] && bun add convex @convex-dev/auth && cd -
-cd [APP_NAME] && CONVEX_DEPLOY_KEY='[DEV_DEPLOY_KEY]' bunx convex dev --once && cd -
-```
-
-The `CONVEX_DEPLOY_KEY` environment variable enables non-interactive deployment.
-
 ---
 
-### Step 3: Push to GitHub
+### Step 5: Add Dependencies and Push Schema
 
 ```bash
-cd [APP_NAME] && git init && git add . && git commit -m "Initial commit: Next.js app with Convex" && cd -
-cd [APP_NAME] && gh repo create [GITHUB_ORG]/[APP_NAME] --public --source=. --remote=origin --push && cd -
+cd [PROJECT_DIR] && bun add convex @convex-dev/auth && cd -
+cd [PROJECT_DIR] && CONVEX_DEPLOY_KEY='[DEV_DEPLOY_KEY]' bunx convex dev --once && cd -
 ```
 
 ---
 
-### Step 4: Create Convex Production Deployment
-
-**4a. Provision production deployment:**
+### Step 6: Create Convex Production Deployment
 
 Use `/convex-manager` to create a production deployment:
-- Project ID: `[PROJECT_ID]` (from Step 2b)
+- Project ID: `[PROJECT_ID]` (from Step 2)
+- Team slug: `[CONVEX_TEAM_SLUG]`
 
-Expected output:
+Expected output - save `deploymentName`:
 ```json
 {
-  "projectName": "my-app",
-  "projectSlug": "my-app",
   "deploymentName": "prod-slug-123",
-  "deploymentUrl": "https://prod-slug-123.convex.cloud",
-  "status": "success"
+  "deploymentUrl": "https://prod-slug-123.convex.cloud"
 }
 ```
 
-Save `deploymentName` for the next step.
+---
 
-**4b. Create deploy key for production:**
+### Step 7: Create Deploy Key for Production
 
 Use `/convex-manager` to create a deploy key:
 - Deployment name: `[PROD_DEPLOYMENT_NAME]`
 - Key name: `vercel-deploy`
 
-Expected output:
+Expected output - save `deployKey` for Vercel:
 ```json
 {
   "deployKey": "prod:prod-slug-123|eyJ2Mi..."
 }
 ```
 
-Save this deploy key for Vercel.
-
 ---
 
-### Step 5: Create Vercel Project and Deploy
+### Step 8: Create Vercel Project
 
-**5a. Create Vercel project:**
-
-Use `/vercel-manager` to create a project with this configuration:
+Use `/vercel-manager` to create a project:
 - Name: `[APP_NAME]`
 - Framework: `nextjs`
 - Build command: `bunx convex deploy --cmd 'bun run build'`
@@ -149,16 +139,17 @@ Use `/vercel-manager` to create a project with this configuration:
 - Environment variables:
   - `CONVEX_DEPLOY_KEY`: `[PROD_DEPLOY_KEY]` (encrypted, targets: production, preview)
 
-**5b. Deploy to Vercel:**
+---
 
-Use `/vercel-manager` to deploy the project:
-- Project directory: `[APP_NAME]`
+### Step 9: Deploy to Vercel
+
+Use `/vercel-manager` to deploy:
+- Project directory: `[PROJECT_DIR]`
 
 Expected output:
 ```json
 {
   "status": "success",
-  "projectDirectory": "/path/to/my-app",
   "deploymentUrl": "https://my-app.vercel.app"
 }
 ```
@@ -177,17 +168,3 @@ After completion, provide this summary:
 | **Convex Prod** | [PROD_DEPLOYMENT_NAME] (https://[PROD_DEPLOYMENT_NAME].convex.cloud) |
 | **Vercel Project** | [APP_NAME] |
 
----
-
-## Troubleshooting
-
-**`bunx convex dev --once` prompts for login:**
-- Set `CONVEX_DEPLOY_KEY` environment variable before running the command
-
-**Production deployment creation fails:**
-- Ensure you're using the correct `team_slug` and `project_slug`
-- The project must exist (created in Step 2b)
-
-**Vercel deploy fails:**
-- Check that VERCEL_TOKEN is set in the `.env` file
-- Ensure the project directory exists
