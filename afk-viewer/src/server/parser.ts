@@ -44,28 +44,36 @@ export function parseJsonlLine(line: string): RawMessage | null {
 // =============================================================================
 
 /**
+ * Parsed JSONL entry with both parsed object and raw line
+ */
+export interface ParsedJsonlEntry {
+  raw: RawMessage;
+  rawLine: string;
+}
+
+/**
  * Parse an entire JSONL file content.
  * Splits by newlines, parses each line, and filters out nulls.
  *
  * @param content - The entire JSONL file content as a string
- * @returns Array of successfully parsed RawMessages
+ * @returns Array of successfully parsed entries with raw lines preserved
  */
-export function parseJsonlFile(content: string): RawMessage[] {
+export function parseJsonlFile(content: string): ParsedJsonlEntry[] {
   if (!content) {
     return [];
   }
 
   const lines = content.split("\n");
-  const messages: RawMessage[] = [];
+  const entries: ParsedJsonlEntry[] = [];
 
   for (const line of lines) {
     const parsed = parseJsonlLine(line);
     if (parsed !== null) {
-      messages.push(parsed);
+      entries.push({ raw: parsed, rawLine: line.trim() });
     }
   }
 
-  return messages;
+  return entries;
 }
 
 // =============================================================================
@@ -223,9 +231,10 @@ function extractUsage(message: RawAssistantMessage): TokenUsage | null {
  * Extracts relevant fields, parses tool calls, and normalizes the structure.
  *
  * @param raw - A raw JSONL message
+ * @param rawLine - Optional raw JSONL string for debugging views
  * @returns A processed Message object for use in the UI
  */
-export function transformMessage(raw: RawMessage): Message {
+export function transformMessage(raw: RawMessage, rawLine?: string): Message {
   // Base fields common to all message types
   const base: Partial<Message> = {
     uuid: raw.uuid,
@@ -234,6 +243,7 @@ export function transformMessage(raw: RawMessage): Message {
     parentUuid: ("parentUuid" in raw && raw.parentUuid) || null,
     agentId: ("agentId" in raw && raw.agentId) || null,
     isSidechain: ("isSidechain" in raw && raw.isSidechain) || false,
+    rawJsonl: rawLine,
   };
 
   // Handle different message types

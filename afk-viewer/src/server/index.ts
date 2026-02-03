@@ -8,6 +8,7 @@ import {
   handleWebSocketMessage,
   handleWebSocketClose,
   type WSClientData,
+  type GetSessionMessages,
 } from "./websocket";
 import type { Project, Session, Message, ToolCallSummary } from "../types";
 
@@ -29,6 +30,12 @@ const sessionsMap = new Map<string, Session>();
 
 // WebSocket manager for broadcasting updates
 const wsManager = createWebSocketManager();
+
+// Function to get messages for a session (used by WebSocket handler)
+const getSessionMessages: GetSessionMessages = (sessionId: string) => {
+  const session = sessionsMap.get(sessionId);
+  return session?.messages ?? null;
+};
 
 // =============================================================================
 // Helper Functions
@@ -208,7 +215,7 @@ const server = Bun.serve<WSClientData>({
       handleWebSocketOpen(ws, wsManager, getProjectsArray());
     },
     message(ws, message) {
-      handleWebSocketMessage(ws, message);
+      handleWebSocketMessage(ws, message, getSessionMessages);
     },
     close(ws) {
       handleWebSocketClose(ws, wsManager);

@@ -20,7 +20,7 @@ import type { Project, Session } from "../types";
 
 function App() {
   // WebSocket connection for real-time data
-  const { isConnected, projects, isLoading, error, subscribe, unsubscribe } =
+  const { isConnected, projects, isLoading, error, subscribe, unsubscribe, requestMessages } =
     useWebSocket();
 
   // Persisted state
@@ -81,10 +81,11 @@ function App() {
       setSelectedProjectPath(projectPath);
       setSelectedSessionId(sessionId);
 
-      // Subscribe to the new session for updates
+      // Subscribe to the new session for updates and request its messages
       subscribe(sessionId);
+      requestMessages(sessionId, projectPath);
     },
-    [selectedSessionId, subscribe, unsubscribe]
+    [selectedSessionId, subscribe, unsubscribe, requestMessages]
   );
 
   // Handle session selection from the agent graph
@@ -99,8 +100,9 @@ function App() {
 
       setSelectedSessionId(sessionId);
       subscribe(sessionId);
+      requestMessages(sessionId, selectedProjectPath);
     },
-    [selectedProjectPath, selectedSessionId, subscribe, unsubscribe]
+    [selectedProjectPath, selectedSessionId, subscribe, unsubscribe, requestMessages]
   );
 
   // Handle pin/unpin project

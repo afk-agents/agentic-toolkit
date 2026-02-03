@@ -155,6 +155,8 @@ export interface Message {
   thinking: string | null;
   model: string | null;
   usage: TokenUsage | null;
+  /** Raw JSONL string for debugging/comparison views */
+  rawJsonl?: string;
 }
 
 /**
@@ -226,6 +228,35 @@ export interface Session {
 }
 
 /**
+ * Lightweight session summary (without messages) for initial state
+ */
+export interface SessionSummary {
+  id: string;
+  projectPath: string;
+  isAgent: boolean;
+  parentId: string | null;
+  agentId: string | null;
+  isActive: boolean;
+  startTime: Date;
+  lastActivity: Date;
+  firstPrompt: string;
+  gitBranch: string | null;
+  stats: SessionStats;
+}
+
+/**
+ * Project with session summaries (for initial state)
+ */
+export interface ProjectSummary {
+  path: string;
+  displayName: string;
+  sessions: SessionSummary[];
+  lastActivity: Date;
+  isPinned: boolean;
+  isExpanded: boolean;
+}
+
+/**
  * Session statistics
  */
 export interface SessionStats {
@@ -288,6 +319,7 @@ export type WSMessage =
   | WSNewSession
   | WSSessionComplete
   | WSInitialState
+  | WSSessionMessages
   | WSConnectionStatus;
 
 export interface WSSessionUpdate {
@@ -313,7 +345,14 @@ export interface WSSessionComplete {
 
 export interface WSInitialState {
   type: "initial_state";
-  projects: Project[];
+  projects: ProjectSummary[];
+}
+
+export interface WSSessionMessages {
+  type: "session_messages";
+  projectPath: string;
+  sessionId: string;
+  messages: Message[];
 }
 
 export interface WSConnectionStatus {
@@ -327,6 +366,7 @@ export interface WSConnectionStatus {
 export type WSClientMessage =
   | { type: "subscribe"; sessionId: string }
   | { type: "unsubscribe"; sessionId: string }
+  | { type: "get_messages"; sessionId: string; projectPath: string }
   | { type: "ping" };
 
 // =============================================================================

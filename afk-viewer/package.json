@@ -5,7 +5,11 @@
   "type": "module",
   "description": "A local Bun/React dashboard for monitoring Claude Code sessions in real-time",
   "scripts": {
-    "dev": "bun --hot src/server/index.ts",
+    "dev": "./dev.sh start",
+    "dev:restart": "./dev.sh restart",
+    "dev:stop": "./dev.sh stop",
+    "dev:status": "./dev.sh status",
+    "dev:logs": "./dev.sh logs",
     "build": "bun build ./src/frontend/index.html --outdir=dist --sourcemap --target=browser --minify --define:process.env.NODE_ENV='\"production\"' --env='BUN_PUBLIC_*'",
     "start": "NODE_ENV=production bun src/server/index.ts"
   },

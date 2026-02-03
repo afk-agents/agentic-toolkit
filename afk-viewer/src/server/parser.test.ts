@@ -168,8 +168,8 @@ describe("parseJsonlFile", () => {
     const result = parseJsonlFile(content);
 
     expect(result).toHaveLength(2);
-    expect(result[0].type).toBe("user");
-    expect(result[1].type).toBe("assistant");
+    expect(result[0].raw.type).toBe("user");
+    expect(result[1].raw.type).toBe("assistant");
   });
 
   test("filters out invalid lines", () => {
@@ -183,8 +183,8 @@ describe("parseJsonlFile", () => {
     const result = parseJsonlFile(content);
 
     expect(result).toHaveLength(2);
-    expect(result[0].type).toBe("user");
-    expect(result[1].type).toBe("assistant");
+    expect(result[0].raw.type).toBe("user");
+    expect(result[1].raw.type).toBe("assistant");
   });
 
   test("handles empty content", () => {
@@ -203,7 +203,7 @@ describe("parseJsonlFile", () => {
     const result = parseJsonlFile(content);
 
     expect(result).toHaveLength(1);
-    expect(result[0].type).toBe("user");
+    expect(result[0].raw.type).toBe("user");
   });
 
   test("preserves order of messages", () => {
@@ -216,9 +216,21 @@ describe("parseJsonlFile", () => {
     const result = parseJsonlFile(content);
 
     expect(result).toHaveLength(3);
-    expect(result[0].uuid).toBe("first");
-    expect(result[1].uuid).toBe("second");
-    expect(result[2].uuid).toBe("third");
+    expect(result[0].raw.uuid).toBe("first");
+    expect(result[1].raw.uuid).toBe("second");
+    expect(result[2].raw.uuid).toBe("third");
+  });
+
+  test("preserves raw JSONL lines", () => {
+    const line1 = JSON.stringify(validUserMessage);
+    const line2 = JSON.stringify(validAssistantMessage);
+    const content = [line1, line2].join("\n");
+
+    const result = parseJsonlFile(content);
+
+    expect(result).toHaveLength(2);
+    expect(result[0].rawLine).toBe(line1);
+    expect(result[1].rawLine).toBe(line2);
   });
 });
 
@@ -380,5 +392,18 @@ describe("transformMessage", () => {
 
     const result = transformMessage(messageWithAgent);
     expect(result.agentId).toBe("agent-123");
+  });
+
+  test("preserves raw JSONL line when provided", () => {
+    const rawLine = JSON.stringify(validUserMessage);
+    const result = transformMessage(validUserMessage, rawLine);
+
+    expect(result.rawJsonl).toBe(rawLine);
+  });
+
+  test("rawJsonl is undefined when not provided", () => {
+    const result = transformMessage(validUserMessage);
+
+    expect(result.rawJsonl).toBeUndefined();
   });
 });

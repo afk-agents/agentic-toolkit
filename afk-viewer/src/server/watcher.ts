@@ -234,8 +234,8 @@ async function readAndParseFile(filePath: string): Promise<Message[]> {
     if (!exists) return [];
 
     const content = await file.text();
-    const rawMessages = parseJsonlFile(content);
-    const messages = rawMessages.map(transformMessage);
+    const entries = parseJsonlFile(content);
+    const messages = entries.map((entry) => transformMessage(entry.raw, entry.rawLine));
     // Filter out messages with invalid dates (e.g., summary messages without timestamps)
     return messages.filter(isValidMessage);
   } catch (error) {
@@ -381,8 +381,10 @@ export function createWatcher(events: WatcherEvents): Watcher {
           );
 
           if (content) {
-            const rawMessages = parseJsonlFile(content);
-            const messages = rawMessages.map(transformMessage).filter(isValidMessage);
+            const entries = parseJsonlFile(content);
+            const messages = entries
+              .map((entry) => transformMessage(entry.raw, entry.rawLine))
+              .filter(isValidMessage);
 
             if (messages.length > 0) {
               events.onSessionUpdate(projectPath, sessionId, messages);

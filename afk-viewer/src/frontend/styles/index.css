@@ -1318,6 +1318,132 @@ body {
   color: var(--text-muted);
 }
 
+/* Header row with raw toggle */
+.message-card__header-row {
+  display: flex;
+  align-items: stretch;
+  background-color: var(--bg-tertiary);
+  border-bottom: 1px solid var(--border-color);
+}
+
+.message-card__header-row .message-card__header {
+  border-bottom: none;
+  flex: 1;
+}
+
+.message-card__raw-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 0.75rem;
+  background-color: transparent;
+  border: none;
+  border-left: 1px solid var(--border-color);
+  cursor: pointer;
+  font-family: "JetBrains Mono", "Fira Code", monospace;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  transition: all 0.2s ease;
+}
+
+.message-card__raw-toggle:hover {
+  background-color: rgba(255, 255, 255, 0.05);
+  color: var(--accent-cyan);
+}
+
+.message-card__raw-toggle--active {
+  background-color: rgba(88, 166, 255, 0.15);
+  color: var(--accent-cyan);
+}
+
+/* Body container for split view */
+.message-card__body-container {
+  display: flex;
+}
+
+.message-card__body-container--split {
+  display: flex;
+  gap: 0;
+}
+
+.message-card__body-container--split .message-card__body {
+  flex: 1;
+  min-width: 0;
+  border-right: 1px solid var(--border-color);
+}
+
+/* Raw JSONL panel */
+.message-card__raw-panel {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  background-color: var(--bg-primary);
+  max-height: 500px;
+  overflow: hidden;
+}
+
+.message-card__raw-header {
+  display: flex;
+  align-items: center;
+  padding: 0.5rem 0.75rem;
+  background-color: rgba(88, 166, 255, 0.1);
+  border-bottom: 1px solid var(--border-color);
+  flex-shrink: 0;
+}
+
+.message-card__raw-label {
+  font-size: 0.65rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--accent-cyan);
+}
+
+.message-card__raw-content {
+  flex: 1;
+  margin: 0;
+  padding: 0.75rem;
+  overflow: auto;
+  font-family: "JetBrains Mono", "Fira Code", monospace;
+  font-size: 0.7rem;
+  line-height: 1.5;
+  color: var(--text-secondary);
+  background-color: transparent;
+  white-space: pre;
+}
+
+.message-card__raw-content code {
+  font-family: inherit;
+  color: inherit;
+  background: transparent;
+}
+
+/* Custom scrollbar for raw panel */
+.message-card__raw-content::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.message-card__raw-content::-webkit-scrollbar-track {
+  background: var(--bg-primary);
+}
+
+.message-card__raw-content::-webkit-scrollbar-thumb {
+  background: var(--border-color);
+  border-radius: 3px;
+}
+
+.message-card__raw-content::-webkit-scrollbar-thumb:hover {
+  background: var(--border-light);
+}
+
+/* Message card with raw visible */
+.message-card--with-raw {
+  border-color: var(--accent-cyan);
+}
+
 /* ===== Tool Card Component ===== */
 .tool-card {
   border-radius: 6px;

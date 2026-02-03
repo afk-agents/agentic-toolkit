@@ -6,6 +6,15 @@ interface MessageCardProps {
   message: Message;
 }
 
+function formatJsonl(jsonl: string): string {
+  try {
+    const parsed = JSON.parse(jsonl);
+    return JSON.stringify(parsed, null, 2);
+  } catch {
+    return jsonl;
+  }
+}
+
 const ROLE_ICONS: Record<string, string> = {
   user: "👤",
   assistant: "🤖",
@@ -34,6 +43,7 @@ function truncateText(text: string, maxLength: number = 200): string {
 
 export function MessageCard({ message }: MessageCardProps) {
   const [isExpanded, setIsExpanded] = useState(false);
+  const [showRawJsonl, setShowRawJsonl] = useState(false);
 
   // Create a map of tool results by tool use id
   const toolResultsMap = useMemo(() => {
@@ -56,82 +66,111 @@ export function MessageCard({ message }: MessageCardProps) {
     : truncateText(message.textContent);
 
   return (
-    <div className={`message-card message-card--${message.role}`}>
-      <button
-        className="message-card__header"
-        onClick={() => setIsExpanded(!isExpanded)}
-        aria-expanded={isExpanded}
-      >
-        <span className="message-card__icon">{icon}</span>
-        <span className="message-card__role">{label}</span>
-        <span className="message-card__timestamp">
-          {formatTimestamp(message.timestamp)}
-        </span>
-        <span className="message-card__toggle">
-          {isExpanded ? "▼" : "▶"}
-        </span>
-      </button>
+    <div className={`message-card message-card--${message.role} ${showRawJsonl ? "message-card--with-raw" : ""}`}>
+      <div className="message-card__header-row">
+        <button
+          className="message-card__header"
+          onClick={() => setIsExpanded(!isExpanded)}
+          aria-expanded={isExpanded}
+        >
+          <span className="message-card__icon">{icon}</span>
+          <span className="message-card__role">{label}</span>
+          <span className="message-card__timestamp">
+            {formatTimestamp(message.timestamp)}
+          </span>
+          <span className="message-card__toggle">
+            {isExpanded ? "▼" : "▶"}
+          </span>
+        </button>
+        {message.rawJsonl && (
+          <button
+            className={`message-card__raw-toggle ${showRawJsonl ? "message-card__raw-toggle--active" : ""}`}
+            onClick={(e) => {
+              e.stopPropagation();
+              setShowRawJsonl(!showRawJsonl);
+            }}
+            title={showRawJsonl ? "Hide raw JSONL" : "Show raw JSONL"}
+            aria-label={showRawJsonl ? "Hide raw JSONL" : "Show raw JSONL"}
+          >
+            {"{ }"}
+          </button>
+        )}
+      </div>
 
-      <div className="message-card__body">
-        {/* Thinking section (for assistant messages) */}
-        {hasThinking && isExpanded && (
-          <div className="message-card__thinking">
-            <div className="message-card__thinking-label">Thinking</div>
-            <div className="message-card__thinking-content">
-              {message.thinking}
+      <div className={`message-card__body-container ${showRawJsonl ? "message-card__body-container--split" : ""}`}>
+        <div className="message-card__body">
+          {/* Thinking section (for assistant messages) */}
+          {hasThinking && isExpanded && (
+            <div className="message-card__thinking">
+              <div className="message-card__thinking-label">Thinking</div>
+              <div className="message-card__thinking-content">
+                {message.thinking}
+              </div>
             </div>
-          </div>
-        )}
+          )}
 
-        {/* Text content */}
-        {hasContent && (
-          <div className="message-card__content">
-            <p className="message-card__text">{displayContent}</p>
-            {isLongContent && !isExpanded && (
-              <button
-                className="message-card__expand-text"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setIsExpanded(true);
-                }}
-              >
-                Show more
-              </button>
-            )}
-          </div>
-        )}
+          {/* Text content */}
+          {hasContent && (
+            <div className="message-card__content">
+              <p className="message-card__text">{displayContent}</p>
+              {isLongContent && !isExpanded && (
+                <button
+                  className="message-card__expand-text"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setIsExpanded(true);
+                  }}
+                >
+                  Show more
+                </button>
+              )}
+            </div>
+          )}
 
-        {/* Tool calls (for assistant messages) */}
-        {hasToolCalls && (
-          <div className="message-card__tools">
-            {message.toolCalls.map((toolCall) => {
-              const result = toolResultsMap.get(toolCall.id);
-              return (
-                <ToolCard
-                  key={toolCall.id}
-                  toolCall={toolCall}
-                  result={result?.content}
-                  isError={result?.isError}
-                />
-              );
-            })}
-          </div>
-        )}
+          {/* Tool calls (for assistant messages) */}
+          {hasToolCalls && (
+            <div className="message-card__tools">
+              {message.toolCalls.map((toolCall) => {
+                const result = toolResultsMap.get(toolCall.id);
+                return (
+                  <ToolCard
+                    key={toolCall.id}
+                    toolCall={toolCall}
+                    result={result?.content}
+                    isError={result?.isError}
+                  />
+                );
+              })}
+            </div>
+          )}
 
-        {/* Token usage (for assistant messages when expanded) */}
-        {message.usage && isExpanded && (
-          <div className="message-card__usage">
-            <span className="message-card__usage-item">
-              In: {message.usage.inputTokens.toLocaleString()}
-            </span>
-            <span className="message-card__usage-item">
-              Out: {message.usage.outputTokens.toLocaleString()}
-            </span>
-            {message.usage.cachedTokens > 0 && (
+          {/* Token usage (for assistant messages when expanded) */}
+          {message.usage && isExpanded && (
+            <div className="message-card__usage">
               <span className="message-card__usage-item">
-                Cached: {message.usage.cachedTokens.toLocaleString()}
+                In: {message.usage.inputTokens.toLocaleString()}
               </span>
-            )}
+              <span className="message-card__usage-item">
+                Out: {message.usage.outputTokens.toLocaleString()}
+              </span>
+              {message.usage.cachedTokens > 0 && (
+                <span className="message-card__usage-item">
+                  Cached: {message.usage.cachedTokens.toLocaleString()}
+                </span>
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* Raw JSONL panel */}
+        {showRawJsonl && message.rawJsonl && (
+          <div className="message-card__raw-panel">
+            <div className="message-card__raw-header">
+              <span className="message-card__raw-label">Raw JSONL</span>
+            </div>
+            <pre className="message-card__raw-content">
+              <code>{formatJsonl(message.rawJsonl)}</code>
+            </pre>
           </div>
         )}
       </div>

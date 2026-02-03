@@ -4,6 +4,26 @@ globs: "*.ts, *.tsx, *.html, *.css, *.js, *.jsx, package.json"
 alwaysApply: false
 ---
 
+## Dev Server
+
+Use `./dev.sh` to manage the dev server. It ensures only one instance runs at a time.
+
+| Command | Description |
+|---------|-------------|
+| `./dev.sh start` | Start the server (shows message if already running) |
+| `./dev.sh restart` | Restart to reload code changes |
+| `./dev.sh stop` | Stop the server |
+| `./dev.sh status` | Show if running + recent logs |
+| `./dev.sh logs` | Tail the server logs |
+
+Or use `bun run dev`, `bun run dev:restart`, `bun run dev:stop`, `bun run dev:status`.
+
+- Server runs on http://localhost:3333
+- Logs: `/tmp/afk-viewer.log`
+- PID file: `/tmp/afk-viewer.pid`
+
+## Bun
+
 Default to using Bun instead of Node.js.
 
 - Use `bun <file>` instead of `node <file>` or `ts-node <file>`

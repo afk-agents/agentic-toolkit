@@ -1,7 +1,9 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import type {
   Project,
+  ProjectSummary,
   Session,
+  SessionSummary,
   Message,
   WSMessage,
   WSClientMessage,
@@ -27,6 +29,8 @@ export interface UseWebSocketResult {
   subscribe: (sessionId: string) => void;
   /** Send an unsubscribe message for a session */
   unsubscribe: (sessionId: string) => void;
+  /** Request messages for a session */
+  requestMessages: (sessionId: string, projectPath: string) => void;
 }
 
 /**
@@ -97,12 +101,43 @@ function parseMessage(data: string): WSMessage {
 }
 
 /**
+ * Convert SessionSummary to Session (with empty messages array)
+ */
+function sessionSummaryToSession(summary: SessionSummary): Session {
+  return {
+    ...summary,
+    messages: [],
+  };
+}
+
+/**
+ * Convert ProjectSummary to Project (with sessions having empty messages)
+ */
+function projectSummaryToProject(summary: ProjectSummary): Project {
+  return {
+    ...summary,
+    sessions: summary.sessions.map(sessionSummaryToSession),
+  };
+}
+
+/**
  * Convert Project array to Map keyed by path
  */
 function projectsArrayToMap(projects: Project[]): Map<string, Project> {
   const map = new Map<string, Project>();
   for (const project of projects) {
     map.set(project.path, project);
+  }
+  return map;
+}
+
+/**
+ * Convert ProjectSummary array to Map keyed by path
+ */
+function projectSummariesToMap(summaries: ProjectSummary[]): Map<string, Project> {
+  const map = new Map<string, Project>();
+  for (const summary of summaries) {
+    map.set(summary.path, projectSummaryToProject(summary));
   }
   return map;
 }
@@ -181,6 +216,13 @@ export function useWebSocket(options: UseWebSocketOptions = {}): UseWebSocketRes
   }, [sendMessage]);
 
   /**
+   * Request messages for a session
+   */
+  const requestMessages = useCallback((sessionId: string, projectPath: string): void => {
+    sendMessage({ type: "get_messages", sessionId, projectPath });
+  }, [sendMessage]);
+
+  /**
    * Handle incoming WebSocket messages
    */
   const handleMessage = useCallback((event: MessageEvent): void => {
@@ -189,10 +231,38 @@ export function useWebSocket(options: UseWebSocketOptions = {}): UseWebSocketRes
 
       switch (message.type) {
         case "initial_state": {
-          // Set all projects from initial state
-          setProjects(projectsArrayToMap(message.projects));
+          // Set all projects from initial state (sessions have empty messages)
+          setProjects(projectSummariesToMap(message.projects));
           setIsLoading(false);
           setError(null);
+          break;
+        }
+
+        case "session_messages": {
+          // Full messages received for a session
+          setProjects((prev) => {
+            const project = prev.get(message.projectPath);
+            if (!project) {
+              return prev;
+            }
+
+            const updatedSessions = project.sessions.map((session) => {
+              if (session.id === message.sessionId) {
+                return {
+                  ...session,
+                  messages: message.messages,
+                };
+              }
+              return session;
+            });
+
+            const newMap = new Map(prev);
+            newMap.set(message.projectPath, {
+              ...project,
+              sessions: updatedSessions,
+            });
+            return newMap;
+          });
           break;
         }
 
@@ -412,6 +482,7 @@ export function useWebSocket(options: UseWebSocketOptions = {}): UseWebSocketRes
     error,
     subscribe,
     unsubscribe,
+    requestMessages,
   };
 }
 

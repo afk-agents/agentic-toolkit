@@ -3,12 +3,15 @@ import type { ServerWebSocket } from "bun";
 import type {
   Message,
   Project,
+  ProjectSummary,
   Session,
+  SessionSummary,
   WSMessage,
   WSSessionUpdate,
   WSNewSession,
   WSSessionComplete,
   WSInitialState,
+  WSSessionMessages,
 } from "../types";
 
 // =============================================================================
@@ -69,6 +72,39 @@ function serializeMessage(message: WSMessage): string {
     }
     return value;
   });
+}
+
+/**
+ * Convert a Session to a SessionSummary (without messages)
+ */
+function toSessionSummary(session: Session): SessionSummary {
+  return {
+    id: session.id,
+    projectPath: session.projectPath,
+    isAgent: session.isAgent,
+    parentId: session.parentId,
+    agentId: session.agentId,
+    isActive: session.isActive,
+    startTime: session.startTime,
+    lastActivity: session.lastActivity,
+    firstPrompt: session.firstPrompt,
+    gitBranch: session.gitBranch,
+    stats: session.stats,
+  };
+}
+
+/**
+ * Convert a Project to a ProjectSummary (with session summaries, no messages)
+ */
+function toProjectSummary(project: Project): ProjectSummary {
+  return {
+    path: project.path,
+    displayName: project.displayName,
+    sessions: project.sessions.map(toSessionSummary),
+    lastActivity: project.lastActivity,
+    isPinned: project.isPinned,
+    isExpanded: project.isExpanded,
+  };
 }
 
 // =============================================================================
@@ -200,20 +236,27 @@ export function handleWebSocketOpen(
 ): void {
   manager.addClient(ws);
 
-  // Send initial state to the new client
+  // Send initial state to the new client (without message content to avoid OOM)
+  const projectSummaries = initialProjects.map(toProjectSummary);
   const message: WSInitialState = {
     type: "initial_state",
-    projects: initialProjects,
+    projects: projectSummaries,
   };
   sendToClient(ws, message);
 }
+
+/**
+ * Callback to get session messages
+ */
+export type GetSessionMessages = (sessionId: string) => Message[] | null;
 
 /**
  * Handle WebSocket message event
  */
 export function handleWebSocketMessage(
   ws: ServerWebSocket<WSClientData>,
-  message: string | Buffer
+  message: string | Buffer,
+  getSessionMessages?: GetSessionMessages
 ): void {
   try {
     const data = JSON.parse(message.toString());
@@ -232,6 +275,23 @@ export function handleWebSocketMessage(
         if (data.sessionId) {
           ws.data.subscribedSessions.delete(data.sessionId);
           console.log(`Client ${ws.data.id} unsubscribed from session ${data.sessionId}`);
+        }
+        break;
+
+      case "get_messages":
+        // Client wants to fetch messages for a session
+        if (data.sessionId && data.projectPath && getSessionMessages) {
+          const messages = getSessionMessages(data.sessionId);
+          if (messages) {
+            const response: WSSessionMessages = {
+              type: "session_messages",
+              projectPath: data.projectPath,
+              sessionId: data.sessionId,
+              messages,
+            };
+            sendToClient(ws, response);
+            console.log(`Sent ${messages.length} messages for session ${data.sessionId}`);
+          }
         }
         break;
 
