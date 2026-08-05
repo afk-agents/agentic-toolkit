@@ -1,110 +1,141 @@
+<div align="center">
+
 # Agentic Toolkit
 
-A collection of skills for AI coding agents. Skills are packaged instructions and scripts that extend agent capabilities.
+**Skills, commands, and an installer for AI coding agents.**
 
-Skills follow the open [Agent Skills](https://agentskills.io/) format specification.
+The extensions I've built to make an agent better at the work I actually do — provisioning backends, managing parallel sessions, and authoring skills themselves.
 
-## Available Skills
+[![Agent Skills](https://img.shields.io/badge/Agent_Skills-11_included-6B4FBB?style=flat-square)](#skills)
+[![Slash Commands](https://img.shields.io/badge/Slash_Commands-7_included-4A5568?style=flat-square)](#slash-commands)
+[![Spec](https://img.shields.io/badge/spec-agentskills.io-0A7EA4?style=flat-square)](https://agentskills.io/specification.md)
+[![Python](https://img.shields.io/badge/uv_scripts-PEP_723-3776AB?style=flat-square&logo=python&logoColor=white)](https://peps.python.org/pep-0723/)
+[![License](https://img.shields.io/badge/license-MIT-green?style=flat-square)](LICENSE)
 
-- [agent-skill-maker](#agent-skill-maker) — Create and update agent skills, against live docs
-- [tailwind-css](#tailwind-css) — Tailwind CSS v4 utilities and patterns
-- [slop-score](#slop-score) — Returns metrics for AI writing patterns *(port — see [license](#license))*
-- [slop-analyzer](#slop-analyzer) — Uses those metrics to suggest revisions *(port — see [license](#license))*
+</div>
+
+---
+
+## What this is
+
+A skill is packaged instructions plus optional scripts that extend what an agent can do. Everything here follows the open [Agent Skills](https://agentskills.io/) format, so it works with any agent that reads the spec rather than being tied to one product.
+
+Each skill is self-contained. You can install one without taking the rest.
+
+```bash
+bunx skills add afk-agents/agentic-toolkit@<skill-name>
+```
+
+---
+
+## Skills
+
+**Authoring**
+
+| Skill | What it does |
+|---|---|
+| `agent-skill-maker` | Creates and updates skills. Fetches the live [specification](https://agentskills.io/specification.md), Claude Code docs, and best-practices guide on every invocation rather than relying on baked-in knowledge, then validates the result against the spec — naming, description length, file references. No cached snapshot to go stale. |
+
+**Backend provisioning and deployment**
+
+| Skill | What it does |
+|---|---|
+| `convex-manager` | Drives the [Convex](https://convex.dev) Management API — list, create, and delete projects; list deployments; mint deploy keys; create production deployments. Six standalone Python scripts, no SDK. |
+| `vercel-manager` | The same idea against the Vercel REST API — list projects, create projects, trigger deployments. |
+| `creating-nextjs-convex-vercel-apps` | The two above, composed. Nine steps from nothing to a deployed fullstack app: scaffold Next.js, push to GitHub, create the Convex dev deployment, mint keys, write `.env.local`, push the schema, create production, create the Vercel project, deploy. Ships with Convex schema/auth/http assets. |
+| `convex-rules` | The Convex conventions an agent gets wrong by default — function syntax, validators, indexes, query vs. mutation vs. action. Loads whenever backend code is in play. |
+
+**Session and workflow**
+
+| Skill | What it does |
+|---|---|
+| `managing-worktrees` | Git worktree management for parallel development — create, list, remove, prune, all under `worktrees/`. Isolated branches without stashing. |
+| `fork-terminal` | Forks the current session into a new terminal window, optionally carrying a summary of the conversation so far as the new agent's opening prompt. Works with Claude Code, Codex CLI, Gemini CLI, or a raw command. Cookbook per tool. |
+| `uv-script` | Self-contained Python scripts using [PEP 723](https://peps.python.org/pep-0723/) inline dependency metadata — no venv, no requirements file, `uv run` and it works. This is the pattern the manager skills are built on. |
+
+**Writing analysis**
+
+| Skill | What it does |
+|---|---|
+| `slop-score` | Scans text for statistical patterns common in AI-generated writing — overused slop words and trigrams, "not just X, but Y" contrast structures, lexical diversity — and returns JSON metrics calibrated against human writing. *(Port — see [license](#license).)* |
+| `slop-analyzer` | Consumes those metrics and interprets them: names the specific words and phrases driving the score, proposes alternatives, and orders suggestions by impact. *(Port — see [license](#license).)* |
+
+**Frontend reference**
+
+| Skill | What it does |
+|---|---|
+| `tailwind-css` | Tailwind CSS v4 — CSS-first `@theme` configuration, responsive breakpoints, state variants, container queries, and the v3-to-v4 migration path including renamed and removed utilities. Eleven reference files loaded on demand. |
 
 > `slop-score` and `slop-analyzer` wrap a TypeScript port of
 > [Sam Paech's slop-score](https://github.com/sam-paech/slop-score). The analysis method and
 > datasets are his; the port, CLI, tests, and skill packaging are the contribution here.
-> Some of the bundled files are Apache-2.0 and CC-BY-SA-4.0 rather than MIT —
+> Some bundled files are Apache-2.0 and CC-BY-SA-4.0 rather than MIT —
 > see [THIRD-PARTY-NOTICES.md](THIRD-PARTY-NOTICES.md).
 
-### slop-score
+---
 
-Analyzes text files for AI-generated writing patterns and returns JSON metrics. Use when checking drafts or essays for overused AI patterns like slop words, contrast structures, and suspicious trigrams.
+## Slash commands
 
-**Install:**
+| Command | |
+|---|---|
+| `/prime` | Loads context for a fresh session — analyzes structure, reads the docs and README, reports back before touching anything |
+| `/question` | Answers questions about the project with no code changes. Read-only by construction: `allowed-tools` is `git ls-files` and `Read` |
+| `/tools` | Lists every built-in non-MCP tool available, with TypeScript-style signatures |
+| `/worktree-create` `/worktree-list` `/worktree-remove` `/worktree-prune` | Worktree lifecycle, matching the skill |
 
-```
-bunx skills add afk-agents/agentic-toolkit@slop-score
-```
+The read-only commands are a small idea that pays off: scoping `allowed-tools` down to exactly what a prompt needs means "just answer my question" can't turn into an edit.
 
-**What it does:**
+---
 
-- Scans text for statistical patterns common in AI-generated writing
-- Detects overused "slop words" and trigrams that LLMs favor
-- Identifies unnatural contrast patterns like "not just X, but Y"
-- Measures lexical diversity and vocabulary level
-- Returns structured JSON output with detailed metrics
-- Provides calibration scores benchmarked against human writing and various AI models
+## The installer
 
-### slop-analyzer
+`bunx skills add` handles skills. `install-claude-extension.sh` handles the rest — it copies skills, commands, *and* agents into a `.claude` directory, from a local path or straight from a URL.
 
-Analyzes writing for AI-like patterns and provides actionable suggestions for making text sound more natural and human-written. Use after drafting creative writing, essays, or blog posts to get revision guidance.
+```bash
+# a command, globally
+./install-claude-extension.sh command ./my-command.md
 
-**Install:**
+# several skills into the current repo
+./install-claude-extension.sh -l skill ./skill-a/ ./skill-b/
 
-```
-bunx skills add afk-agents/agentic-toolkit@slop-analyzer
-```
-
-**What it does:**
-
-- Runs slop-score analysis and interprets the results
-- Identifies specific words and phrases that trigger AI detection
-- Provides concrete revision suggestions with alternatives
-- Prioritizes feedback by impact—leading with the most important changes
-- Frames suggestions constructively without quality judgments
-- Understands that good writing has personality and occasionally breaks rules
-
-### tailwind-css
-
-Tailwind CSS v4 styling with utility-first classes, theme configuration, and modern CSS patterns. Use when writing or modifying CSS classes, configuring themes, implementing responsive designs, or migrating from v3.
-
-**Install:**
-
-```
-bunx skills add afk-agents/agentic-toolkit@tailwind-css
+# straight from GitHub
+./install-claude-extension.sh command https://raw.githubusercontent.com/user/repo/main/commands/example.md
 ```
 
-**What it does:**
+| Flag | |
+|---|---|
+| `-g, --global` | Install to `~/.claude` (default) |
+| `-l, --local` | Install to `./.claude` in the current repo |
+| `-h, --help` · `-v, --version` | |
 
-- Provides quick reference for responsive breakpoints, state variants, and dark mode
-- Explains v4 CSS-first configuration with `@theme` blocks
-- Documents the v3 to v4 migration path including renamed and removed utilities
-- Covers functions, directives, container queries, and advanced variants
-- Includes comprehensive utility references for layout, typography, colors, and more
-- Shows common patterns for centering, grids, cards, buttons, and forms
+Accepts `skill`/`skills`, `command`/`commands`, `agent`/`agents`. Handles both directory-style and single-file extensions, creates target directories as needed, warns before overwriting, and needs `curl` or `wget` for URLs. Full docs in [README-install-script.md](README-install-script.md).
 
-### agent-skill-maker
+---
 
-Creates or updates agent skills following the official [Agent Skills specification](https://agentskills.io/specification.md) and best practices. Use it when you want to author a new skill, update an existing one, or scaffold a skill directory structure.
-
-**Install:**
-
-```
-bunx skills add afk-agents/agentic-toolkit@agent-skill-maker
-```
-
-**What it does:**
-
-- Fetches the latest Agent Skills specification, Claude Code skills documentation, and best practices guide before writing anything
-- Parses the user's request for a skill name and description
-- Checks for an existing skill and preserves its structure when updating
-- Designs frontmatter, content structure, and supporting files
-- Writes valid SKILL.md with proper YAML frontmatter and markdown body
-- Verifies the result against specification rules (naming, description length, line count, file references)
-
-**Always up to date:**
-
-The agent-skill-maker fetches live documentation from the web on every invocation rather than relying on baked-in knowledge. This means skills it produces will conform to the latest version of the specification and best practices, even after the format evolves. There is no cached snapshot to go stale -- the source of truth is always the published docs.
-
-## Skill Structure
+## Skill structure
 
 Each skill follows the [Agent Skills specification](https://agentskills.io/specification.md):
 
-- `SKILL.md` - Required. YAML frontmatter plus markdown instructions for the agent.
-- `scripts/` - Optional. Executable code the agent can run.
-- `references/` - Optional. Supporting documentation loaded on demand.
-- `assets/` - Optional. Static resources such as templates, images, or data files.
+- `SKILL.md` — Required. YAML frontmatter plus markdown instructions for the agent.
+- `scripts/` — Optional. Executable code the agent can run.
+- `references/` — Optional. Supporting documentation loaded on demand.
+- `assets/` — Optional. Static resources such as templates, images, or data files.
+
+Skills vendor their dependencies rather than sharing them. `slop-score` and `slop-analyzer` each carry a full copy of the analysis engine instead of pointing at a common parent. That duplication is deliberate: a skill has to resolve as a standalone install target, so `bunx skills add ...@slop-analyzer` must work without also pulling `slop-score`.
+
+---
+
+## Using any of this
+
+The manager skills need credentials — `CONVEX_TOKEN` and `VERCEL_TOKEN` in a `.env` at your project root. See [.env.example](.env.example).
+
+The Python scripts are PEP 723 self-contained; [uv](https://docs.astral.sh/uv/) runs them with no setup:
+
+```bash
+uv run skills/convex-manager/scripts/list_projects.py
+```
+
+---
 
 ## License
 
