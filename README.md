@@ -115,7 +115,7 @@ Grab a skill directory and drop it into your own `.claude/skills/`, or use the i
 ```bash
 git clone https://github.com/namick/claude-experiments.git
 cd claude-experiments
-./install-claude-extension.sh -g skill .claude/skills/uv-script/
+./install-claude-extension.sh -g skill skills/uv-script/
 ```
 
 The manager skills need credentials — `CONVEX_TOKEN` and `VERCEL_TOKEN` in a `.env` at your project root. See [.env.example](.env.example).
@@ -123,7 +123,7 @@ The manager skills need credentials — `CONVEX_TOKEN` and `VERCEL_TOKEN` in a `
 The Python scripts are PEP 723 self-contained; [uv](https://docs.astral.sh/uv/) runs them with no setup:
 
 ```bash
-uv run .claude/skills/convex-manager/scripts/list_projects.py
+uv run skills/convex-manager/scripts/list_projects.py
 ```
 
 ---
