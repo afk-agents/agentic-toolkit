@@ -6,10 +6,16 @@ Skills follow the open [Agent Skills](https://agentskills.io/) format specificat
 
 ## Available Skills
 
-- [slop-score](#slop-score) — Returns metrics for AI writing patterns
-- [slop-analyzer](#slop-analyzer) — Uses metrics to provide actionable revision suggestions
+- [agent-skill-maker](#agent-skill-maker) — Create and update agent skills, against live docs
 - [tailwind-css](#tailwind-css) — Tailwind CSS v4 utilities and patterns
-- [agent-skill-maker](#agent-skill-maker) — Create and update agent skills
+- [slop-score](#slop-score) — Returns metrics for AI writing patterns *(port — see [license](#license))*
+- [slop-analyzer](#slop-analyzer) — Uses those metrics to suggest revisions *(port — see [license](#license))*
+
+> `slop-score` and `slop-analyzer` wrap a TypeScript port of
+> [Sam Paech's slop-score](https://github.com/sam-paech/slop-score). The analysis method and
+> datasets are his; the port, CLI, tests, and skill packaging are the contribution here.
+> Some of the bundled files are Apache-2.0 and CC-BY-SA-4.0 rather than MIT —
+> see [THIRD-PARTY-NOTICES.md](THIRD-PARTY-NOTICES.md).
 
 ### slop-score
 
@@ -102,4 +108,20 @@ Each skill follows the [Agent Skills specification](https://agentskills.io/speci
 
 ## License
 
-MIT
+This repository's own work is [MIT](LICENSE).
+
+It also bundles third-party components that are **not** all MIT. `slop-score` is a
+TypeScript port of [Sam Paech's slop-score](https://github.com/sam-paech/slop-score)
+(MIT), and it carries the upstream's split licensing for the wordfreq parts:
+
+| Component | License |
+|---|---|
+| This repo's own work | MIT |
+| slop-score core + datasets | MIT © Sam Paech |
+| `src/lib/wordfreq.ts` | Apache-2.0 |
+| `data/large_en.msgpack.gz` | **CC-BY-SA-4.0** (share-alike) |
+
+The data file is share-alike: redistributing it carries attribution *and* licensing
+obligations that MIT does not. If you plan to reuse or repackage these skills, read
+[THIRD-PARTY-NOTICES.md](THIRD-PARTY-NOTICES.md) first — it has the full breakdown,
+the required citations, and the statement of changes.
